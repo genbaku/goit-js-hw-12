@@ -106,12 +106,12 @@
   padding: 8px 16px;
 }
 
-.search-query:hover{
+.search-query:hover {
   outline: 1px solid #000;
 }
 
-.search-query:focus{
-  outline: 1px solid #4E75FF;
+.search-query:focus {
+  outline: 1px solid #4e75ff;
 }
 
 button[type='submit'] {
@@ -132,8 +132,8 @@ button[type='submit'] {
 }
 
 button[type='submit']:hover,
-button[type='submit']:focus{
-  background: #6C8CFF;
+button[type='submit']:focus {
+  background: #6c8cff;
 }
 
 /* GALLERY */
@@ -168,4 +168,11 @@ img {
   font-weight: 400;
   line-height: 24px;
   letter-spacing: 0.64px;
+}
+
+.load-more-btn {
+  display: none;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 12px;
 }

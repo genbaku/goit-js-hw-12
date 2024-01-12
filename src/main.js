@@ -2,44 +2,76 @@ import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
+import axios from "axios";
 
 const apiKey = "41526510-fe2a9843669a4013cb75574c6";
 const apiUrl = "https://pixabay.com/api/";
 const gallery = document.querySelector(".gallery");
 const searchForm = document.querySelector(".search-form");
 const loader = document.querySelector(".loader-container");
+const loadMoreBtn = document.querySelector(".load-more-btn");
 
-searchForm.addEventListener("submit", function (event) {
+let currentPage = 1;
+let currentQuery = '';
+
+searchForm.addEventListener("submit", async function (event) {
     event.preventDefault();
-    const searchQuery = document.querySelector(".search-query").value;
-    searchImages(searchQuery);
+    currentQuery = document.querySelector(".search-query").value;
+    currentPage = 1;
+    await searchImages(currentQuery);
 });
 
-function searchImages(query) {
-    loader.style.display = "flex";
+loadMoreBtn.addEventListener("click", function () {
+    currentPage++;
+    searchImages(currentQuery, currentPage);
+});
 
-    fetch(`${apiUrl}?key=${apiKey}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            displayImages(data.hits);
-        })
-        .catch(error => {
-            showError('An error occurred. Please try again.');
-            console.error('Fetch error:', error);
-        })
-        .finally(() => {
-            loader.style.display = "none";
+async function searchImages(query, page = 1) {
+    loader.style.display = "flex";
+    try {
+        const response = await axios.get(apiUrl, {
+            params: {
+                key: apiKey,
+                q: query,
+                image_type: "photo",
+                orientation: "horizontal",
+                safesearch: true,
+                page: page,
+                per_page: 40
+            },
         });
+
+        const data = response.data;
+        if (currentPage === 1) {
+            gallery.innerHTML = ""; 
+        }
+
+        displayImages(data.hits);
+        if (page * 40 >= data.totalHits) {
+            loadMoreBtn.style.display = "none";
+            showError("We're sorry, but you've reached the end of search results.");
+        } else {
+            loadMoreBtn.style.display = "block";
+        }
+
+        const cardHeight = gallery.querySelector(".image-card").getBoundingClientRect().height;
+        window.scrollBy(0, cardHeight * 2);
+
+    } catch (error) {
+        showError("An error occurred. Please try again.");
+        console.error("Axios error:", error);
+
+    } finally {
+        loader.style.display = "none";
+    }
 }
 
 function displayImages(images) {
-    gallery.innerHTML = "";
-    if (images.length === 0) {
+    if (currentPage === 1) {
+        gallery.innerHTML = "";
+    }
+
+    if (images.length === 0 && currentPage === 1) {
         showError("Sorry, there are no images matching your search query. Please try again!");
         return;
     }
@@ -60,6 +92,7 @@ function displayImages(images) {
         `;
         gallery.appendChild(card);
     });
+
     const lightbox = new SimpleLightbox('.image-card a', {
         captionsData: 'alt',
         captionPosition: 'bottom',
